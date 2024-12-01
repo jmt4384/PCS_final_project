@@ -175,7 +175,7 @@ def import_input_file():
             
             for row in reader:
                 count+=1
-                # ormalizace, osekání řádků a úprava textů, def měna = CZK
+                # normalizace, osekání řádků a úprava textů, def měna = CZK
                 normalised_row=normalise_pay_data(row,count)
                 # ověření, že normalizace a validace proběhla v pořádku
                 if normalised_row==None or validate_row(normalised_row)==False:
@@ -347,22 +347,94 @@ def select_payer(dict_of_payers):
 
 def add_pay(data):
     '''
-    TO BE DONE !!!
-    funkce přidá záznam do živých načtených dat
-    možnost --- aktualizuj balance sheet
+    funkce na přidání platby do seznamu
+    
+    Parameters:
+        list of dict
+    Returns:
+        list of dict
     '''
-
-    """normalised_data={
-        "num":num,
-        "date_time":normalised_data["date_time"].strip() if normalised_data.get("date_time") else "nevyplněno",
-        "payer":normalised_data["payer"].strip().title() if normalised_data.get("payer") else "nevyplněno",
-        "subject":normalised_data["subject"].strip() if normalised_data.get("subject") else "nevyplněno",
-        "amount":float(normalised_data["amount"]) if normalised_data.get("amount") else "nevyplněno",
-        "currency":normalised_data["currency"].strip() if normalised_data.get("currency") and normalised_data["currency"].strip() else "CZK",
-            }
-    normalised_data["norm_amount"]=norm_amount(normalised_data["amount"], normalised_data["currency"])
-    """
+    
+    # zavolal jsem si funkce pro načtení dat
+    date_time=insert_pay("date_time")
+    payer=insert_pay("payer")
+    subject=insert_pay("subject")
+    amount=insert_pay("amount")
+    currency=insert_pay("currency")
+    
+    # nalezení čísla kterým bude nový záznam označen
+    max_num=0
+    # nalezení maximálního označení v balance sheetu
+    for row in data:
+        if row["num"]>max_num:
+            max_num=row["num"]
+            
+    #nový záznam bude mít max pořadí +1
+    new_num=max_num+1
+    #
+    new_pay_data={
+        "date_time":date_time, 
+        "payer":payer,
+        "subject":subject,
+        "amount":amount,
+        "currency":currency,
+          }
+    #nový záznam bude znormalizován a bude doplněn přepočet do CZK "norm amount
+    new_pay_data=normalise_pay_data(new_pay_data, new_num)
+    new_pay_data["norm_amount"]=norm_amount(amount, currency)
+    
+    #nový záznam doplněný do stávajícího pole
+    data.append(new_pay_data)
     return data
+
+def insert_pay(text):
+    '''
+    funkce na korektní vsup nové platby z klávesnice
+    
+    Parameters:
+        str text
+    Returns:
+        str nebo float
+    '''
+    # vynulování proměnných
+    date_time=""
+    payer=""
+    subject=""
+    amount=0
+    currency=""
+    
+    # nekonečná smyčka pokud zadání selže, bude se opakovat
+    while True:
+        try:
+            # pokud bude zadávání v režimu datum čas
+            if text=="date_time" and date_time=="":
+                date_time=input("zadej datum a čas ve formátu dd.mm.rrrr hh:mm\n")
+                # podmínka formátu date_time
+                return date_time
+            # pokud bude zadávání v režimu kdo platil
+            if text=="payer" and payer=="":
+                payer=input("zadej kdo platil\n")
+                if payer.isalpha():
+                    return payer
+            # pokud bude zadávání v režimu co se platilo
+            if text=="subject" and subject=="":
+                subject=input("zadej za co byla platba provedena\n")
+                if subject.isalnum():
+                    return subject
+            # pokud bude zadávání v režimu placené částtky
+            if text=="amount" and amount==0:
+                amount=float(input("zadej částku\n"))
+                if isinstance(amount,float):
+                    return amount
+            # pokud bude zadávání v režimu měny placení
+            if text=="currency" and currency=="":
+                currency=input("zadej měnu ve které byla platba provedena\n")
+                return currency
+        except:
+            # chybová hláška
+            print("zadal si nekorektní data, pokračuj")
+                
+            
     
 
 def remove_pay(data):
@@ -577,7 +649,7 @@ MAIN_MENU={
 EDIT_MENU={
     0:"Exit do hlavního menu",
     1:"Odebrání stávajícího člena",
-    2:"Přidání platby - NEFUNKCNI !!!",
+    2:"Přidání platby",
     3:"Odebrání platby",
     }
 
