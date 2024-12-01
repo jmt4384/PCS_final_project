@@ -1,270 +1,595 @@
+# Import modulů
 import csv
+
+
+# Výběrové funkce
 
 def select_main_function():
     '''
-    základní rozhodování programu - výběr funkce
+    Funkce pro bezpečnou volbu funkce v hlavním menu
+    Parameters:
+        vstup z klávesnice
+    Returns:
+        int menu
+    ''' 
     
-    výstupem bude menu - tj. číslo, kter definuje jaká ze základních funkcí
-    programu bude volána
-    '''
     while True:
-        #zobrazení uživateli hlavního menu a jeho výběr požadované funkce
-        print("v hlavní nabídce jsou dostupné tyto možnosti")
-        for key, value in nabidka_menu.items():  
+        # zobrazení uživateli hlavního menu
+        print("V hlavní nabídce jsou dostupné tyto možnosti")
+        for key, value in MAIN_MENU.items():  
             print(f"možnost: {key} funkce: {value}")
+        # vstup z klávesnice
         menu=input("Pro výběr funkce zvol číslo: 01234\n")
+
         try:
+            # vstupní znak je v povolených
             int(menu)
-            if int(menu) in nabidka_menu.keys():
+            if int(menu) in MAIN_MENU.keys():
                 menu=int(menu)
-                print(f"zvolil si {menu}, funkci {nabidka_menu[menu]}")
+                print(f"Zvolil si {menu}, funkci {MAIN_MENU[menu]}")
                 break
+        # ošetření vyjímky, pro znak, který nelze převést na int
         except:
-            print("zvolil si nepovolený znak, povelené jsou pouze čísla 01234")
+            print("Zvolil si nepovolený znak"
+                  "Pro výběr funkce zvol číslo: 01234")
     return menu
+
 
 def select_edit_function():
     '''
-    sekundární rozhodování programu - výběr editojící funkce funkce
-    
-    výstupem bude menu - tj. číslo, kter definuje jaká z editujících funkcí
+    Funkce pro bezpečnou volbu funkce v editovacím menu
+    Parameters:
+        vstup z klávesnice
+    Returns:
+        int menu
     '''
-    for key, value in editace_zaznamu.items():
-        print(f"možnost: {key} funkce: {value}")
+    # vypsání možností editace
+    for key, value in EDIT_MENU.items():
+        print(f"Možnost: {key} Funkce: {value}")
+        
     while True:
-        menu=input("Pro výběr funkce zvol číslo: 12345\n")
+        # vstup z klávesnice
+        menu=input("Pro výběr funkce zvol číslo: 0123\n")
         try:
             int(menu)
-            if int(menu) in nabidka_menu.keys():
+            # vstupní znak je v povolených
+            if int(menu) in EDIT_MENU.keys():
                 menu=int(menu)
-                print(f"zvolil si {menu}, funkci {nabidka_menu[menu]}")
+                print(f"Zvolil si {menu}, Funkci {EDIT_MENU[menu]}")
                 break
         except:
-            print("zvolil si nepovolený znak, povelené jsou pouze čísla 1234")
+            print("Zvolil si nepovolený znak"
+                  "Pro výběr funkce zvol číslo: 0123")
     return menu
+
+
+# Funkce provádějící zvolené operace - volání dílčích funkcí
 
 def main_function_decision():
     '''
-    hlavní rozhodovací smyčka, po provedení funkce, program čeká na povel
-    k provedení nové funkce popř. exit
+    hlavní rozhodovací smyčka, po provedení požadované funkce
+    Parameters:
+        int výstup funkce select_main_function()
+    Returns:
+        None
     '''
+    # při prvním spuštění ještě nebyl proveden import dat
+    import_done=False          
+    # při prvním spuštění ještě nebyl vytvořen Balance Sheet 
+    balance_sheet_done=False
+    # výstup z cyklu lze pouze volbou 0 - řádné ukončení programu
     while True:
         menu=select_main_function()
-        if menu==1:                 #načtení vstupního souboru
-            data=import_input_file()
-            print("data byla importována, nyní může být vytvořen balance sheet")
-            import_done=True
-        if menu==2 and import_done:        #vytvoření balance sheetu podle lidí
-            create_balance_sheet_payer(data)
-        if menu==3 and import_done:         #vytvoření balance sheetu podle času
-            create_balance_sheet_time(data)
-        if menu==4 and import_done:         #editace záznamů
-            edit_function_decision()
-        if menu==5 and import_done:         #uložení balance sheetu
-            save_balance_sheet()
         if menu==0:
             break
-        print("----------------------")
+        # načtení vstupního souboru
+        if menu==1:                 
+            data=import_input_file()
+            import_done=True
+            pause_to_menu()
+        # editace záznamů
+        if menu==2 and import_done:
+            data=edit_function_decision(data)
+            pause_to_menu()
+        # vytvoření balance sheetu a výsl. rozpočtu
+        if menu==3 and import_done: 
+            [BS_data, final_table]=create_balance_sheet(data)
+            balance_sheet_done=True
+            pause_to_menu()
+        # uložení balance sheetu a výsl. rozpočtu
+        if menu==4 and balance_sheet_done:
+            save_balance_sheet(BS_data, final_table)
+            pause_to_menu()
+        # pokud nebyl proveden import nelze pokračovat
+        if not import_done:
+            print("Funkci není možno provést, data nebyla importována")
+            pause_to_menu()
+ 
         
-def edit_function_decision():
+def edit_function_decision(data):
     '''
-    vedlejší rozhodovací smyčka, po provedení editovací funkce, 
-    program čeká na povel k provedení další funkce popř. exit do hlavního menu
+    vedlejší rozhodovací smyčka, po provedení požadované funkce
+    Parameters:
+        int výstup funkce select_edit_function()
+    Returns:
+        data (list)
     '''
+    # výstup z cyklu lze pouze volbou 0 - výstup do hlavního menu
     while True:
         menu=select_edit_function()
+        # výstup do hlavního menu
         if menu==0:
             break
+        # provedení funkce odebrání člena
         if menu==1:
-            add_new_member(data)
+            data=remove_member(data)
+            pause_to_menu()
+        # provedení funkce doplnění nové platby
         if menu==2:
-            remove_member(data)
-        if menu==3:
             add_pay(data)
-        if menu==4:
-            edit_pay(data)
-        if menu==5:
-            remove_pay(data)
-        print("----------------------")
-        
+            pause_to_menu()
+        # provedení funkce odebrání platby
+        if menu==3:
+            data=remove_pay(data)
+            pause_to_menu()
+    return data
+       
+
+# Funkce pozastavení výběru
+
+def pause_to_menu():
+    '''
+    funkce pauzy
+    Parameters:
+        vstup z klávesnice
+    Returns:
+        None
+    '''
+    input("Pro pokračování běhu programu stiskni libovolnou klávesu")
+    return
+
+
+# Funkce importu souboru, setřídění, normalizace, validace, přepočet kurzů
+
 def import_input_file():
     '''
-    načtení vtupního souboru databáze, předpokládám, že existuje soubor
-    input_data.csv - jinak vyhodí hlášku "soubor nenalezen"
-    funkce provede ověření, setřídění, normalizaci dat
-    
-    výstupem bude dictionary "data" 
+        načtení vstupního souboru input_data_full.csv
+        funkce provede ověření, setřídění, normalizaci dat
+    Parameters:
+        input_data_full.csv
+    Returns:
+        list data
     '''
+
+
     data=[]
+    fail_data=[]
+    # ošetření vyjímky kdyby soubor nebylo možné otevřít
     try:
-        with open("input_data.csv","r") as input_file:
-            print("soubor importován")
-            reader=csv.DictReader(input_file, delimiter=',',fieldnames=CSV_FIELD_NAME)
-            count=1
-            for radek in reader:
+        with open("input_data_full.csv","r",encoding="utf-8") as input_file:
+            #print("soubor importován")
+            reader=csv.DictReader(input_file, delimiter=',',
+                                  fieldnames=CSV_FIELD_NAME)
+            # očíslování záznamů - přidání klíče "num"
+            count=0
+            
+            for row in reader:
                 count+=1
-                #normalizace, osekání řádků a úprava textů, def měna = CZK
-                normalised_row=normalise_pay_data(radek)              
-                #validace záznamu - musí být vždy alespoň kdo platil a kolik
-                #jinak je řádek přeskočen
-                if not validate_row(normalised_row):
-                    print(f"chybný záznam č. {count} přeskočen")
+                # ormalizace, osekání řádků a úprava textů, def měna = CZK
+                normalised_row=normalise_pay_data(row,count)
+                # ověření, že normalizace a validace proběhla v pořádku
+                if normalised_row==None or validate_row(normalised_row)==False:
+                    print(f"Chybný záznam na řádku č. {count} přeskočen")
+                    fail_data.append(row)
                     continue
-                data.append(radek)
-        print(data)
-        print("vstupní soubor je řádně upraven")
-    except:
-        print("vstupní soubor nenalezen")
+                else:
+                    # normalizovaná, validovaná data jsou připojena do
+                    # pracovních dat
+                    data.append(normalised_row)                    
+
+            print("Vstupní soubor upraven, může být vytvořen Balance Sheet")
+            
+            # pokud byla vypsána nějaká chybová data, uložit do souboru
+            if fail_data!=[]:
+                # soubor fail_input_data režim přepis
+                with open("fail_input_data.csv",
+                          "w",encoding="utf-8") as fail_input_file:
+                    writer = csv.DictWriter(fail_input_file, 
+                                            fieldnames=CSV_FIELD_NAME)
+                    writer.writeheader()
+                    for radek in fail_data:
+                        writer.writerow(radek)
+                print("Ve vstupním souboru byla nalezena nekorektní data"
+                      " tyto záznamy byly přeskočeny " 
+                      "a vypsány v fail_input_data.csv")
+            #print(data)
+    # Vyjímka nenalezení souboru
+    except FileNotFoundError:
+        print("Vstupní soubor nenalezen")
         return None
     return data
 
-def normalise_pay_data(pay_data):
-    '''konverze řádky ve vstupním souboru tak, aby obsahoval pouze 
-    požadovaná data
-    
-    výstup je normalizovaná řádka
+
+def normalise_pay_data(pay_data,num):
     '''
+    konverze řádky ve vstupním souboru tak, aby obsahoval pouze 
+    požadovaná data, pokud není možné provést, vrátí None
     
-    pay_data_str={key:str(value) for key,value in pay_data.items() if key in CSV_FIELD_NAME}
-    ''''doplnění polí do plné délky'''
-    
-    normalised_data={
-        "date_time":pay_data_str["date_time"].strip() if pay_data_str.get("date_time") else "nevyplněno",
-        "payer":pay_data_str["payer"].strip().capitalize() if pay_data_str.get("payer") else "nevyplněno",
-        "subject":pay_data_str["subject"].strip() if pay_data_str.get("subject") else "nevyplněno",
-        "amount":pay_data_str["amount"].strip() if pay_data_str.get("amount") else "nevyplněno",
-        "currency":pay_data_str["currency"].strip() if pay_data_str.get("currency") else "CZK",
-        }
-    return normalised_data
+    Parameters:
+        list pay_data, int num
+    Returns:
+        list normalised_data/ None
+    '''
+    try:
+        # ošetření vyjímky, pokud by nebylo možné záznam převést na float
+        # doplnění polí do normalizované délky
+        normalised_data={key:str(value) for key,value in pay_data.items() 
+                         if key in CSV_FIELD_NAME}
+        
+        # načtení do polí korektních dat 
+        normalised_data={
+            "num":num,
+            "date_time":normalised_data["date_time"].strip() 
+            if normalised_data.get("date_time") else "nevyplněno",
+            "payer":normalised_data["payer"].strip().title() 
+            if normalised_data.get("payer") else "nevyplněno",
+            "subject":normalised_data["subject"].strip() 
+            if normalised_data.get("subject") else "nevyplněno",
+            "amount":float(normalised_data["amount"])
+            if normalised_data.get("amount") else "nevyplněno",
+            "currency":normalised_data["currency"].strip()
+            if normalised_data.get("currency") and 
+            normalised_data["currency"].strip() else "CZK",
+                }
+        # doplnění pole jednotné měny
+        normalised_data["norm_amount"]=norm_amount(normalised_data["amount"], 
+                                                   normalised_data["currency"])
+        return normalised_data
+    except:
+        return None
+
 
 def validate_row(row):
     '''
     ověření, že má řádka validní parametry kdo platil, částka
-    výstup T/F - platný neplatný řádek v datech
+    
+    Parameters:
+        list row
+    Returns:
+        True / False
     '''
-    if row["payer"]=="" or row["amount"]=="":
+    # pokud je v řádce alespoň kdo platil a částka, je řádka vylidní
+    if (row["payer"]=="nevyplněno") or (row["amount"]=="nevyplněno") or row["payer"]=="":
         return False
     return True
 
-def exchange_eur(eur):
-    '''
-    převod měny EUR na CZK
-    '''
-    return EXCHANGE_E_CZK*eur
 
-def exchange_tl(tl):
+def norm_amount(amount,currency):
     '''
-    převod měny TL na CZK
+    přepočet částky na normativní měnu pomocí směnných kurzů    
+    Parameters:
+        float amount, str currency
+    Returns:
+        float result
     '''
-    return EXCHANGE_TL_CZK*tl  
+    # podmínka pro měnu EUR
+    if currency=="EUR":
+        result = amount*EXCHANGE_E_CZK
+    # podmínka pro měnu Tl
+    elif currency=="TL":
+        result = amount*EXCHANGE_TL_CZK
+    # jinak je předpoklad vstupu v CZK
+    else:
+        result = amount
+    return round(result,2)    
   
-def norm_amount(radek):
-    
-    if radek["currency"]=="CZK":
-        norm_amount=radek["currency"]
-    elif radek["currency"]=="EUR":
-        norm_amount=exchange_eur(radek["currency"])
-    elif radek["currency"]=="TL":
-        norm_amount=exchange_tl(radek["currency"])
-    else:                 #pokud je na znaku měny něco jiného, pak jsou to CZK
-        norm_amount=radek["currency"]
-   
-    return norm_amount
 
-        
-def rewrite_input_file():
+# Funkce pro editaci záznamů - odebrání člena, přidání platby, odebrání platby
+
+def remove_member(data):
     '''
-    funkce na přepsání vstupního souboru vyčištěnými normalizovanými daty
-    '''
-def create_balance_sheet_payer(data):
-    '''
-    vytvoření balance sheetu setříděné podle podle osob
-    zobrazení na obrazovku
-    možnost: 
-        výstup do souboru --- volání funkce 3
-        volba pokud nesouhlasíš, volej funkci "editace záznamů"
-    '''
-    #přidání sloupečku jednotné měny
-    for radek in data:
-        radek["def_currency"]=norm_amount(radek)
+    funkce odebere člena - všechny jeho platby
+    Parameters:
+        list data
+    Returns:
+        list out_data
+    '''  
     
-    print("tady bude vytvořen balance sheet")
-    print(data)
+    dict_of_payers={}
+    out_data=[]
     
+    # vytvoření seznamu všech členů
+    payers=get_list_payers(data)
+    # očíslování všech členů pro jednotnou identifikaci
+    for index in range(1,len(payers)+1):
+        dict_of_payers[index]=payers[index-1]
+        print(f"Zvol {index} pro odebrání {dict_of_payers[index]}")
     
-def create_balance_sheet_time():
+    # zvolenému číslu náleží jméno ze slovníku
+    removed_payer_num=select_payer(dict_of_payers)
+    # podmínka návratu do menu, data jsou nezměněna oproti vstupním
+    if removed_payer_num==0:
+        return data
+    removed_payer=dict_of_payers[removed_payer_num]
+    # projdi všechny záznamy a pokud je tam někde řádka s jiným platičem
+    # tak ji přiřaˇ%d do výstupních dat
+    for row in data:
+        if row["payer"]!=removed_payer:
+            out_data.append(row)
+    # výstupní data jsou vyfiltrována o definovaného člena
+    return out_data
+    
+
+def select_payer(dict_of_payers):
     '''
-    balancesheet setříděný podle času
+    funkce na výběr validního člena ze vstupu klávesnice
+    Parameters:
+        dict dict_of_payers
+    Returns:
+        int result
     '''
-def add_new_member():
+    # smyčka pro opakování při nevalidním vstupu
+    while True:
+        try:
+            # zadání čísla člena k vymazání
+            result=int(input("Zadej číslo člena k vymazání, 0 pro exit"))
+            # podmínka, že zadané číslo je není mimo validní označení člena
+            # a je nenulové ... je int, ale není validní
+            if (result not in dict_of_payers.keys()) and result!=0:
+                print("zvolil si nepovolený znak")
+                continue
+            break
+        except:
+            # ošetření podmínky nepovoleného znaku
+            print("Zvolil si nepovolený znak")
+    return result
+
+
+def add_pay(data):
     '''
-    funkce přidá nového člena do živé databáze plus jeho platby
-    možnost --- aktualizuj balance sheet
-    '''
-def remove_member():
-    '''
-    funkce odebere člena a všechny jeho platby
-    možnost --- aktualizuj balance sheet
-    '''
-    print("tady bude funkce pro odebrání člena party")
-def add_pay():
-    '''
+    TO BE DONE !!!
     funkce přidá záznam do živých načtených dat
     možnost --- aktualizuj balance sheet
     '''
-def remove_pay():
+
+    """normalised_data={
+        "num":num,
+        "date_time":normalised_data["date_time"].strip() if normalised_data.get("date_time") else "nevyplněno",
+        "payer":normalised_data["payer"].strip().title() if normalised_data.get("payer") else "nevyplněno",
+        "subject":normalised_data["subject"].strip() if normalised_data.get("subject") else "nevyplněno",
+        "amount":float(normalised_data["amount"]) if normalised_data.get("amount") else "nevyplněno",
+        "currency":normalised_data["currency"].strip() if normalised_data.get("currency") and normalised_data["currency"].strip() else "CZK",
+            }
+    normalised_data["norm_amount"]=norm_amount(normalised_data["amount"], normalised_data["currency"])
+    """
+    return data
+    
+
+def remove_pay(data):
     '''
-    funkce odebere záznam z živých načtených dat
-    možnost --- aktualizuj balance sheet
+    funkce na smazání konkrétního platebního záznamu
+    číslování se bere podle aktuálního balance sheetu na obrazovce
+    Parameters:
+        list data
+    Returns:
+        list data
     '''
-def edit_pay():
+    # načtení čísla platby z funkce pro ošetření vyjímek 
+    removed_num=select_num_pay(data)
+    
+    # cyklus iteruje přes všechny záznamy a pokud je pro nějaký řádek na
+    # pozici označení "num" dané číslo, veme si z něj index tohoto řádku
+    for index in range(0,len(data)):
+        num=data[index]["num"]
+        if num==removed_num:
+            break
+    # smazání řádku záznamu na nalezeném indexu
+    data.pop(index)
+    # návrat aktualizovaných dat
+    return data
+    
+
+def select_num_pay(data):
     '''
-    funkce umožní editaci 1 řádku živých dat
-    možnost --- aktualizuj balance sheet
+    funkce pro korektní výběr platebního záznamu
+    výstupem je číslo bezpečně označující mazaného člena
+    Parameters:
+        list data
+    Returns:
+        int num_pay
     '''
-def save_balance_sheet():
+    ident_pays=[]
+    
+    # vytvoření listu čísel záznamů v datech
+    for row in data:
+        ident_pays.append(row["num"])
+        
+    while True:
+        # ošetření vyjímky, pro vstup nepoveleného znaku
+        try:
+            num_pay=int(input("Zadej číslo platby k vymazání z "
+                             "aktuálního Balance Sheetu, případně 0 pro exit"))
+            # zvolené číslo není v seznamu záznamů, nebo 0
+            if (num_pay not in ident_pays) and num_pay!=0:
+                print("Zvolil si nepovolený znak")
+                continue
+            break
+        except:
+            print("Zvolil si nepovolený znak") 
+    return num_pay
+        
+    
+# Funkce pro vytvoření Balance Sheetu a výsledného rozpočtu
+def create_balance_sheet(data):
     '''
-    po výstupu na obrazovce ... uložení balance sheetu do souboru č.2
+    vytvoření balance sheetu a finálního sumáře rozpočtu setříděné podle podle
+    osob - zobrazení na obrazovku
+    + výstup v return datech
+    Parameters:
+        list data
+    Returns:
+        list [balance_sheet_data, final_table]
     '''
-'''konstanty'''
+    #print(data)
+    # deklarace proměnných
+    balance_sheet_data=[]
+    sumary_data={}
+    total_expense=0
+    final_table=[]
+    
+    # načtení seznamu platičů v databázi a jejich počet
+    payers=get_list_payers(data)
+    num_payers=len(payers)
+    
+    # cyklus přes všechny platiče v databázi
+    for payer in payers:
+        # vytištění hlavičky konkrétního platiče
+        balance_sheet_data.append(f"\nPro plátce {payer} jsou záznamy:")
+        # zaplaceno daným platičem
+        payed=0
+        # pro každý záznam v databázi
+        for row in data:
+            # pokud je záznam pro konkrétního platiče separuj hodnoty
+            # a vypiš formatovanou radku
+            if row["payer"] == payer:
+                num = row["num"]
+                date = row["date_time"]
+                subject = row["subject"]
+                amount = row["amount"]
+                currency=row["currency"]
+                normativni_cena=row["norm_amount"]
+                #podil_ceny=round(normativni_cena/num_payers,2)
+                # vypiš řádku
+                formated_row = f"|{num:<5}" \
+                                    f"| {date:<16}" \
+                                    f"| {subject:<40}"\
+                                    f"| {amount:>8} "\
+                                    f"| {currency:<4}"\
+                                    f"| {normativni_cena:>8}"
+                # zapiš řádku do balance sheetu pro uložení do souboru
+                balance_sheet_data.append(formated_row)
+                # výpočet celkových zaplacených nákladů daným platičem
+                payed+=normativni_cena
+                # výpočet celkových nákladů
+                total_expense+=normativni_cena
+            # definice tabulky výdajů- platič : jeho výdaje    
+            sumary_data[payer]=round(payed,2)
+    # zaokrouhlení celkových výdajů    
+    total_expense=round(total_expense,2)
+    
+    # výpis balance sheet tabulky
+    for row in balance_sheet_data:
+        print(row)
+    print("\n")   
+    
+    # výpis souhrnné tabulky zaplacených nákladů a přepočtu
+    print("Souhrn")
+    num_payer=1
+    # výpis pro každého platiče v sumáři
+    for key,value in sumary_data.items():
+        # dopočtení rozdílu kolik měl zaplatit - kolik zapplatil 
+        rozdil=round(total_expense/num_payers-value,2)
+        # pokud měl zaplatit více musí doplácet
+        if rozdil>=0:
+            message="musí doplatit"
+        # pokud zaplatil více, musí mu být doplaceno
+        else:
+            message="musí mu být doplaceno"
+        # zformátování řádky
+        formated_row=(f"|{num_payer:<5}" \
+              f"| {key:<16}" \
+              f"| {message:<40}"\
+              f"| {abs(rozdil):>8} "\
+              f"| CZK"
+              )
+        # uložení řádky do výstupních dat
+        final_table.append(formated_row)
+        # výpis na obrazovku
+        print(formated_row)
+        # označení dalšího člena
+        num_payer+=1
+        
+    # doprovodná zpráva
+    final_message=f"Celkem se utratilo {total_expense} CZK"
+    print(final_message)
+    # uložení doprovodné zprávy
+    final_table.append(final_message)
+    # export 2 tabulek - Balance sheetu a souhrnné tabulky
+    return [balance_sheet_data, final_table]
+    
+
+def get_list_payers(data):
+    '''
+    nalezení seznamu všech platičů
+    Parameters:
+        list data
+    Returns:
+        list list_payers
+    '''
+    list_payers=[]
+    # výpis všech platičů ve všech záznamech do listu
+    for row in data:
+        list_payers.append(row["payer"])
+    # ošetření duplikátů - set získám jedinečný seznam platičů
+    list_payers=list(set(list_payers))
+    # výstup setříděný podle abecedy
+    return sorted(list_payers)
+
+   
+#Funkce pro uložení Balance Sheetu, a výsledného rozpočtu
+
+def save_balance_sheet(balance_sheet_data, final_table):
+    '''
+    zápis balance sheetu a finálního rozpočtu do souboru
+    tak jak byl naposledy zobrazen na obrazovce / naposledy editován
+    Parameters:
+        list [balance_sheet_data, final_table]
+    Returns:
+        file output_data.csv
+    '''
+    # otevření souboru pro zápis
+    with open("output_data.csv","w",encoding="utf-8",newline="") as output_file:
+       writer = csv.writer(output_file)
+       # výpis balance sheetu do souboru po řádcích
+       for row in balance_sheet_data:
+           writer.writerow([row])
+       # oddělení    
+       writer.writerow("")
+       # výpis final table do souboru po řádcích
+       for row in final_table:
+           writer.writerow([row])
+    
+
+# Seznam konstant
+
 CSV_FIELD_NAME=["date_time", "payer","subject", "amount", "currency"]
-CURRENCY="CZK"
 EXCHANGE_E_CZK=24.7
 EXCHANGE_TL_CZK=0.7
 
-'''
-hlavní menu projektu
-'''
-#tohle jsou dostupné funkce
-'''možnost doplnit - vytvoření vstupního souboru, '''
-
-nabidka_menu={
-    0:"exit",
-    1:"načtení vtupního souboru databáze",
-    2:"vytvoření balance sheetu",
-    3:"editace záznamů",
-    4:"uložení balance sheetu a přepsání vstupního souboru normalizovanými daty",
-    }
-editace_zaznamu={
-    0:"exit do hlavního menu",
-    1:"přidání nového člena",
-    2:"odebrání stávajícího člena",
-    3:"přidání platby",
-    4:"editace jedné platby",
-    5:"odebrání platby",
+MAIN_MENU={
+    0:"Exit",
+    1:"Načtení vtupního souboru input_data.csv",
+    2:"Editace záznamů",
+    3:"Vytvoření/ zobrazení balance sheetu, výsledného rozpočtu",
+    4:"Uložení balance sheetu, výsledného rozpočtu",
     }
 
-#uvítání
-print('''Vítejte v programu "shared Pays"\n''')
+EDIT_MENU={
+    0:"Exit do hlavního menu",
+    1:"Odebrání stávajícího člena",
+    2:"Přidání platby - NEFUNKCNI !!!",
+    3:"Odebrání platby",
+    }
 
+
+# Hlavní běh programu
+
+print("Vítejte v programu shared Pays")
 print("Tento program slouží k přepočtu sdílených nákladů" 
-"na společný projekt/ výlet více účastníků a rovnému vyrovnání mezi nimi\n")
-
-main_function_decision()
-
-
-   
-print("program byl řádně ukončen užiatelem")
+      " na společný projekt/ výlet více účastníků a rovnému vyrovnání mezi" 
+      " nimi\n")
+main_function_decision() 
+print("Program byl řádně ukončen užiatelem")
 
 
 
