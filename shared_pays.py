@@ -40,7 +40,7 @@ def select_main_function():
                 print(f"Zvolil si {menu}, funkci {MAIN_MENU[menu]}")
                 break
         # ošetření vyjímky, pro znak, který nelze převést na int
-        except:
+        except ValueError:
             print("Zvolil si nepovolený znak"
                   "Pro výběr funkce zvol číslo: 01234")
     return menu
@@ -71,7 +71,7 @@ def select_edit_function():
                 print(f"Zvolil si {menu}, Funkci {EDIT_MENU[menu]}")
                 print(40*"-")
                 break
-        except:
+        except ValueError:
             print("Zvolil si nepovolený znak"
                   "Pro výběr funkce zvol číslo: 0123")
     return menu
@@ -198,8 +198,9 @@ def import_input_file():
                 # normalizace, osekání řádků a úprava textů, def měna = CZK
                 normalised_row = normalise_pay_data(row, count)
                 # ověření, že normalizace a validace proběhla v pořádku
-                if (normalised_row is None
-                    or validate_row(normalised_row) is False):
+                if (
+                        normalised_row is None
+                        or validate_row(normalised_row) is False):
                     print(f"Chybný záznam na řádku č. {count} přeskočen")
                     fail_data.append(row)
                     continue
@@ -264,10 +265,11 @@ def normalise_pay_data(pay_data, num):
             normalised_data["currency"].strip() else "CZK",
                 }
         # doplnění pole jednotné měny
-        normalised_data["norm_amount"] = norm_amount(normalised_data["amount"],
-                                        normalised_data["currency"])
+        normalised_data["norm_amount"] = norm_amount
+        (normalised_data["amount"],
+         normalised_data["currency"])
         return normalised_data
-    except:
+    except ValueError:
         return None
 
 
@@ -281,7 +283,11 @@ def validate_row(row):
         True / False
     '''
     # pokud je v řádce alespoň kdo platil a částka, je řádka vylidní
-    if (row["payer"] == "nevyplněno") or (row["amount"] == "nevyplněno") or row["payer"] == "":
+    if (
+            row["payer"] == "nevyplněno"
+            or row["amount"] == "nevyplněno"
+            or row["payer"] == ""
+            ):
         return False
     return True
 
@@ -363,7 +369,7 @@ def select_payer(dict_of_payers):
                 print("zvolil si nepovolený znak")
                 continue
             break
-        except:
+        except ValueError:
             # ošetření podmínky nepovoleného znaku
             print("Zvolil si nepovolený znak")
     return result
@@ -457,7 +463,7 @@ def insert_pay(text):
             if text == "currency" and currency == "":
                 currency = input("zadej měnu ve které byla platba provedena\n")
                 return currency
-        except:
+        except ValueError:
             # chybová hláška
             print("zadal si nekorektní data, pokračuj")
 
@@ -523,7 +529,7 @@ def select_num_pay(data):
                 print("Zvolil si nepovolený znak")
                 continue
             break
-        except:
+        except ValueError:
             print("Zvolil si nepovolený znak")
     return num_pay
 
@@ -657,7 +663,8 @@ def save_balance_sheet(balance_sheet_data, final_table):
         file output_data.csv
     '''
     # otevření souboru pro zápis
-    with open("output_data.csv", "w", encoding="utf-8", newline="") as output_file:
+    with open("output_data.csv", "w", encoding="utf-8", newline="") \
+            as output_file:
         writer = csv.writer(output_file)
         # výpis balance sheetu do souboru po řádcích
         for row in balance_sheet_data:
