@@ -69,6 +69,7 @@ def select_edit_function():
             if int(menu) in EDIT_MENU.keys():
                 menu = int(menu)
                 print(f"Zvolil si {menu}, Funkci {EDIT_MENU[menu]}")
+                print(40*"-")
                 break
         except:
             print("Zvolil si nepovolený znak"
@@ -106,6 +107,7 @@ def main_function_decision():
             pause_to_menu()
         # vytvoření balance sheetu a výsl. rozpočtu
         if menu == 3 and import_done:
+            clear_screen()
             [BS_data, final_table] = create_balance_sheet(data)
             balance_sheet_done = True
             pause_to_menu()
@@ -117,7 +119,7 @@ def main_function_decision():
         if not import_done:
             print("Funkci není možno provést, data nebyla importována")
             pause_to_menu()
-        #clear_screen()
+
 
 def edit_function_decision(data):
     '''
@@ -127,6 +129,7 @@ def edit_function_decision(data):
     Returns:
         data (list)
     '''
+    clear_screen()
     # výstup z cyklu lze pouze volbou 0 - výstup do hlavního menu
     while True:
         menu = select_edit_function()
@@ -135,14 +138,17 @@ def edit_function_decision(data):
             break
         # provedení funkce odebrání člena
         if menu == 1:
+            clear_screen()
             data = remove_member(data)
             pause_to_menu()
         # provedení funkce doplnění nové platby
         if menu == 2:
+            clear_screen()
             add_pay(data)
             pause_to_menu()
         # provedení funkce odebrání platby
         if menu == 3:
+            clear_screen()
             data = remove_pay(data)
             pause_to_menu()
     return data
@@ -160,6 +166,7 @@ def pause_to_menu():
     '''
     print(40*"-")
     input("Pro pokračování běhu programu stiskni libovolnou klávesu\n")
+    clear_screen()
     return
 
 
@@ -191,7 +198,8 @@ def import_input_file():
                 # normalizace, osekání řádků a úprava textů, def měna = CZK
                 normalised_row = normalise_pay_data(row, count)
                 # ověření, že normalizace a validace proběhla v pořádku
-                if normalised_row == None or validate_row(normalised_row) == False:
+                if (normalised_row is None
+                    or validate_row(normalised_row) is False):
                     print(f"Chybný záznam na řádku č. {count} přeskočen")
                     fail_data.append(row)
                     continue
@@ -257,7 +265,7 @@ def normalise_pay_data(pay_data, num):
                 }
         # doplnění pole jednotné měny
         normalised_data["norm_amount"] = norm_amount(normalised_data["amount"],
-                                                normalised_data["currency"])
+                                        normalised_data["currency"])
         return normalised_data
     except:
         return None
@@ -318,7 +326,7 @@ def remove_member(data):
     for index in range(1, len(payers)+1):
         dict_of_payers[index] = payers[index-1]
         print(f"Zvol {index} pro odebrání {dict_of_payers[index]}")
-
+    print(40*"-")
     # zvolenému číslu náleží jméno ze slovníku
     removed_payer_num = select_payer(dict_of_payers)
     # podmínka návratu do menu, data jsou nezměněna oproti vstupním
@@ -330,6 +338,8 @@ def remove_member(data):
     for row in data:
         if row["payer"] != removed_payer:
             out_data.append(row)
+    # info hláška že se odebral removed_payer
+    print(f"byl odebrán člen {removed_payer}")
     # výstupní data jsou vyfiltrována o definovaného člena
     return out_data
 
@@ -471,7 +481,18 @@ def remove_pay(data):
         if num == removed_num:
             break
     # smazání řádku záznamu na nalezeném indexu
-    data.pop(index)
+    removed_pay = data.pop(index)
+    print("Z aktuálního balance sheetu byla vymazána platba s těmito daty:")
+    number = removed_pay["num"]
+    print("| číslo platby:"+12*" "+f"{number:<40}")
+    payer = removed_pay["payer"]
+    print("| plátce:"+18*" "+f"{payer:<40}")
+    subject = removed_pay["subject"]
+    print("| předmět platby:"+10*" "+f"{subject:<40}")
+    amount = removed_pay["amount"]
+    currency = removed_pay["currency"]
+    print("| částka:"+18*" "+f"{amount} {currency}")
+
     # návrat aktualizovaných dat
     return data
 
@@ -496,7 +517,7 @@ def select_num_pay(data):
         try:
             num_pay = int(input("Zadej číslo platby k vymazání z "
                                 "aktuálního Balance Sheetu, případně"
-                                "0 pro exit"))
+                                " 0 pro exit\n"))
             # zvolené číslo není v seznamu záznamů, nebo 0
             if (num_pay not in ident_pays) and num_pay != 0:
                 print("Zvolil si nepovolený znak")
