@@ -265,9 +265,9 @@ def normalise_pay_data(pay_data, num):
             normalised_data["currency"].strip() else "CZK",
                 }
         # doplnění pole jednotné měny
-        normalised_data["norm_amount"] = norm_amount
-        (normalised_data["amount"],
-         normalised_data["currency"])
+        normalised_data["norm_amount"] = float(norm_amount
+                                               (normalised_data["amount"],
+                                                normalised_data["currency"]))
         return normalised_data
     except ValueError:
         return None
@@ -575,8 +575,8 @@ def create_balance_sheet(data):
                 normativni_cena = row["norm_amount"]
                 # odil_ceny = round(normativni_cena/num_payers,2)
                 # vypiš řádku
-                formated_row = f"|{num:<5}" \
-                    f"| {date:<16}" \
+                formated_row = f"|{num:<5}"\
+                    f"| {date:<16}"\
                     f"| {subject:<40}"\
                     f"| {amount:>8} "\
                     f"| {currency:<4}"\
@@ -671,6 +671,9 @@ def save_balance_sheet(balance_sheet_data, final_table):
             writer.writerow([row])
         # oddělení
         writer.writerow("")
+        writer.writerow([40*"-"])
+        writer.writerow(["Souhrn"])
+        writer.writerow([40*"-"])
         # výpis final table do souboru po řádcích
         for row in final_table:
             writer.writerow([row])
